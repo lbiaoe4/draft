@@ -889,8 +889,5 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`LBI Draft em http://localhost:${PORT}`);
-  console.log(`Admin: http://localhost:${PORT}/admin.html`);
-  console.log(`Painel: http://localhost:${PORT}/admin/rooms`);
+server.listen(PORT, () => console.log("listening on", PORT));
 });
