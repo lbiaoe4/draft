@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LBI • Draft</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    /* ajustes pedidos: interface ~80% e bordas mais fortes */
+    html { font-size: 90%; }
+    .wrap { max-width: 980px; }
+    .iconImg { width: 110px; height: 110px; }
+    .iconCard { padding: 8px; }
+    .iconCard.banOutline { outline: 3px solid #d10000; box-shadow: 0 0 0 2px rgba(209,0,0,.25); }
+    .iconCard.snipOutline { outline: 3px solid #d10000; box-shadow: 0 0 0 2px rgba(209,0,0,.25); }
+    .hiddenCard { opacity: .9; }
+    .poolSep { grid-column: 1 / -1; font-size: .9em; opacity: .8; margin-top: 8px; }
+  </style>
+
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logoDot"></span>
+      <span>SELETOR DE MAPAS E CIVILIZAÇÕES LBI</span>
+    </div>
+    <nav class="links">
+      <a class="ghost" href="admin.html">Admin</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section id="joinBox" class="panel">
+      <h1 class="title">Entrar na Partida</h1>
+
+      <div class="joinGrid">
+        <div class="field">
+          <label>ID da partida</label>
+          <input id="roomId" class="mono" placeholder="Ex: 2A6F9B" />
+        </div>
+
+        <div class="field">
+          <label>Função</label>
+          <select id="role">
+            <option value="P1">Jogador #1</option>
+            <option value="P2">Jogador #2</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>&nbsp;</label>
+          <button id="join" class="btn primary w100">ENTRAR</button>
+        </div>
+      </div>
+
+      <div id="status" class="status muted">Aguardando…</div>
+    </section>
+
+    <!-- READY -->
+    <section id="readyBox" class="panel mt hidden">
+      <div class="center">
+        <div class="bigId">ID: <span id="rid" class="mono"></span></div>
+        <div id="who" class="whoLine"></div>
+
+        <div class="readyStatus">
+          <div class="readyItem"><span class="dot green"></span> Jogador #1: <strong id="rP1">—</strong></div>
+          <div class="readyItem"><span class="dot amber"></span> Jogador #2: <strong id="rP2">—</strong></div>
+        </div>
+
+        <div class="mt2 muted">Pressione quando estiver pronto</div>
+        <button id="readyBtn" class="btn primary mt2">PRONTO</button>
+      </div>
+    </section>
+
+    <!-- DRAFT -->
+    <section id="draftBox" class="mt hidden">
+      <div class="topLine">
+        <div class="pill">ID: <strong class="mono" id="hdrId"></strong></div>
+        <div class="pill">Série: <strong id="hdrSeries"></strong></div>
+        <div class="pill">Etapa: <strong id="hdrStep"></strong></div>
+      </div>
+
+      <div id="boardsBox" class="boards">
+        <div class="boardCard">
+          <div class="boardHead"><span class="dot green"></span> JOGADOR #1</div>
+          <div class="subHead">Selecionado:</div>
+          <div id="p1Sel" class="miniRow"></div>
+          <div class="subHead mt1">Banido / Sniped:</div>
+          <div id="p1Ban" class="miniRow"></div>
+        </div>
+
+        <div class="boardCard">
+          <div class="boardHead"><span class="dot amber"></span> JOGADOR #2</div>
+          <div class="subHead">Selecionado:</div>
+          <div id="p2Sel" class="miniRow"></div>
+          <div class="subHead mt1">Banido / Sniped:</div>
+          <div id="p2Ban" class="miniRow"></div>
+        </div>
+      </div>
+
+      <div class="centerBox mt">
+        <div id="instruction" class="instruction">—</div>
+      </div>
+
+      <!-- CONFIRM STEP -->
+      <div id="confirmBox" class="center mt hidden">
+        <div id="confirmText" class="muted">Etapa concluída. Clique OK para avançar.</div>
+        <button id="confirmBtn" class="btn primary mt2">OK</button>
+      </div>
+
+
+      <!-- MAP POOL / CIV POOL / SNIPE POOL -->
+      <div class="poolPanel mt">
+        <div class="poolTitleRow">
+          <h2 id="poolTitle" class="h2">Pool</h2>
+          <div id="assignHint" class="muted small hidden">ASSIGN: clique num mapa abaixo e depois clique numa civ sua.</div>
+        </div>
+        <div id="pool" class="poolGrid"></div>
+
+        <!-- ASSIGN simplified pools (only during ASSIGN) -->
+        <div id="assignPools" class="assignPools hidden">
+          <div class="assignCol">
+            <div class="subHead">Suas civs disponíveis</div>
+            <div id="myCivsPool" class="poolGrid"></div>
+          </div>
+</div>
+      </div>
+
+      <!-- ASSIGN MAPS -->
+      <div id="assignMaps" class="panel mt hidden">
+        <h2 class="h2">Selecionar Civilização por Mapa</h2>
+        <div id="mapsRow" class="mapsRow"></div>
+        <div class="mt2">
+          <div class="subHead">Civs disponíveis do oponente:</div>
+          <div id="oppCivsRow" class="miniRow"></div>
+        </div>
+        <div class="muted small mt1">Clique num mapa para selecionar, depois clique numa civ sua na pool.</div>
+      </div>
+
+      <!-- SUMMARY IMAGE -->
+      <div id="summaryBox" class="panel mt hidden">
+        <h2 class="h2">Resumo</h2>
+        <div class="center">
+          <img id="summaryImg" class="summaryImg" alt="Resumo" />
+          <div class="mt2">
+            <button id="downloadSummary" class="btn">Baixar imagem</button>
+          </div>
+        </div>
+        <canvas id="summaryCanvas" class="hidden" width="1400" height="800"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

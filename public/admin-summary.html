@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LBI Draft • Resumo</title>
+  <style>
+    body{margin:0;font-family:Arial,system-ui,sans-serif;background:#f6f9ff;color:#0b1220}
+    header{padding:14px 18px;border-bottom:1px solid rgba(11,18,32,.12);background:#fff;display:flex;gap:12px;align-items:center}
+    .muted{color:rgba(11,18,32,.7);font-size:12px}
+    #wrap{padding:16px}
+    img{max-width:100%;height:auto;display:block;background:#fff;border:1px solid rgba(11,18,32,.12);border-radius:12px}
+    button{padding:8px 12px;border-radius:10px;border:1px solid rgba(11,18,32,.18);background:#fff;cursor:pointer}
+  </style>
+</head>
+<body>
+  <header>
+    <strong id="title">Resumo</strong>
+    <span class="muted" id="status"></span>
+    <button id="refresh">Atualizar</button>
+  </header>
+  <div id="wrap">
+    <div id="root">Carregando...</div>
+  </div>
+  <script src="/admin-summary.js"></script>
+</body>
+</html>

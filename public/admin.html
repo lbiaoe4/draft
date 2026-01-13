@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LBI • Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logoDot"></span>
+      <span>LBI • Admin (Criar ID)</span>
+    </div>
+    <nav class="links">
+      <a class="ghost" href="room.html">Abrir Room</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <h1 class="title">Painel de Configuração</h1>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Série</label>
+          <select id="series">
+            <option value="BO1">BO1</option>
+            <option value="BO2">BO2</option>
+            <option value="BO3" selected>BO3</option>
+            <option value="BO5">BO5</option>
+            <option value="BO7">BO7</option>
+          </select>
+          <div class="help">Gera automaticamente a ordem MAP/CIV/REVEAL/SNIPE/ASSIGN/RESUMO.</div>
+        </div>
+
+        <div class="field">
+          <label>Observação</label>
+          <div class="help">
+            Civs e Maps devem ter imagens 128x128 em <span class="mono">public/imgs</span>.
+            Você pode usar <span class="mono">imgs/maps</span> e <span class="mono">imgs/civs</span> (recomendado) ou tudo “flat”.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2 mt">
+        <div class="field">
+          <label>Pool de MAPAS (1 por linha)</label>
+			<textarea id="maps" rows="10">
+Arabia
+African_Waters
+Archipelago
+Atacama
+Atoll
+Baltic
+Black_Forest
+Coastal
+Confluence
+Continental
+Dry_River
+Excavation
+Four_Lakes
+Glade
+Golden_Pit
+Golden_Swamp
+Gorge
+Haywire
+Hideout
+Kawasan
+Kerlaugar
+King_of_the_Hill
+Marshland
+Migration
+Mountain_Pass
+Oasis
+Prairie
+Scandinavia
+Socotra
+Volcanic_Island
+Wetlands
+Wilderness
+			</textarea>
+        </div>
+
+        <div class="field">
+          <label>Pool de CIVILIZAÇÕES (1 por linha)</label>
+			<textarea id="civs" rows="10">
+Aiubidas
+Bizantinos
+Casa_de_Lancaster
+Chines
+Dinastia_Abassida
+Dinastia_Macedônica
+Dinastia_Tughlaq
+Frances
+Horda_Dourada
+Ingles
+Japones
+Joana_dArc
+Malianos
+Mongois
+O_Legado_de_Zhu_Xi
+Ordem_do_Dragao
+Os_Cavaleiros_Templarios
+Otomanos
+Rus
+Sacro_Imperio_Romano
+Sengoku_Daimyo
+Sultanato_Deli
+			</textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="create" class="btn primary">GERAR ID</button>
+        <div id="out" class="out"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function lines(text){
+      return text.split("\n").map(s=>s.trim()).filter(Boolean);
+    }
+
+    function flowFor(series){
+      // MAP
+      const map = [];
+      const civ = [];
+
+      if(series === "BO1"){
+        // map: P1 Ban, P2 ban, P1 Ban, P2 ban, Random Pick
+        map.push({type:"MAP_BAN", mode:"TURN", by:"P1"});
+        map.push({type:"MAP_BAN", mode:"TURN", by:"P2"});
+        map.push({type:"MAP_BAN", mode:"TURN", by:"P1"});
+        map.push({type:"MAP_BAN", mode:"TURN", by:"P2"});
+        map.push({type:"MAP_RANDOM", mode:"AUTO"});
+        // civ: P1 Ban, P2 ban, P1 e P2 pick 1 simultâneo (pode repetir), REVEAL, SUMMARY
+        civ.push({type:"CIV_BAN", mode:"TURN", by:"P1"});
+        civ.push({type:"CIV_BAN", mode:"TURN", by:"P2"});
+        civ.push({type:"CIV_PICK", mode:"SIMUL", count:1});
+        civ.push({type:"CIV_REVEAL", mode:"AUTO"});
+        civ.push({type:"SUMMARY", mode:"AUTO"});
+        return [...map, ...civ];
+      }
+
+      if(series === "BO2"){
+        // map: P1 Ban, P2 ban, P1 pick, P2 pick
+        map.push({type:"MAP_BAN", mode:"TURN", by:"P1"});
+        map.push({type:"MAP_BAN", mode:"TURN", by:"P2"});
+        map.push({type:"MAP_PICK", mode:"TURN", by:"P1"});
+        map.push({type:"MAP_PICK", mode:"TURN", by:"P2"});
+        // civ: pick 3 simultâneo, REVEAL, SNIPE(1) simultâneo, REVEAL, ASSIGN, SUMMARY
+        civ.push({type:"CIV_PICK", mode:"SIMUL", count:3});
+        civ.push({type:"CIV_REVEAL", mode:"AUTO"});
+        civ.push({type:"CIV_SNIPE", mode:"SIMUL", count:1});
+        civ.push({type:"CIV_REVEAL", mode:"AUTO"});
+        civ.push({type:"ASSIGN", mode:"SIMUL"}); // assign em todos mapas
+        civ.push({type:"SUMMARY", mode:"AUTO"});
+        return [...map, ...civ];
+      }
+
+      if(series === "BO3"){
+        // map: P1 Ban, P2 ban, P1 pick, P2 pick, Random Pick
+        map.push({type:"MAP_BAN", mode:"TURN", by:"P1"});
+        map.push({type:"MAP_BAN", mode:"TURN", by:"P2"});
+        map.push({type:"MAP_PICK", mode:"TURN", by:"P1"});
+        map.push({type:"MAP_PICK", mode:"TURN", by:"P2"});
+        map.push({type:"MAP_RANDOM", mode:"AUTO"});
+        // civ: pick 4 simultâneo, REVEAL, SNIPE(1) simultâneo, REVEAL, ASSIGN, SUMMARY
+        civ.push({type:"CIV_PICK", mode:"SIMUL", count:4});
+        civ.push({type:"CIV_REVEAL", mode:"AUTO"});
+        civ.push({type:"CIV_SNIPE", mode:"SIMUL", count:1});
+        civ.push({type:"CIV_REVEAL", mode:"AUTO"});
+        civ.push({type:"ASSIGN", mode:"SIMUL"});
+        civ.push({type:"SUMMARY", mode:"AUTO"});
+        return [...map, ...civ];
+      }
+
+      if(series === "BO5"){
+        // map: P1 Ban, P2 ban, P1 pick, P2 pick, P1 pick, P2 pick, Random Pick
+        map.push({type:"MAP_BAN", mode:"TURN", by:"P1"});
+        map.push({type:"MAP_BAN", mode:"TURN", by:"P2"});
+        map.push({type:"MAP_PICK", mode:"TURN", by:"P1"});
+        map.push({type:"MAP_PICK", mode:"TURN", by:"P2"});
+        map.push({type:"MAP_PICK", mode:"TURN", by:"P1"});
+        map.push({type:"MAP_PICK", mode:"TURN", by:"P2"});
+        map.push({type:"MAP_RANDOM", mode:"AUTO"});
+        // civ: pick 6 simultâneo, REVEAL, SNIPE(1) simultâneo, REVEAL, ASSIGN, SUMMARY
+        civ.push({type:"CIV_PICK", mode:"SIMUL", count:6});
+        civ.push({type:"CIV_REVEAL", mode:"AUTO"});
+        civ.push({type:"CIV_SNIPE", mode:"SIMUL", count:1});
+        civ.push({type:"CIV_REVEAL", mode:"AUTO"});
+        civ.push({type:"ASSIGN", mode:"SIMUL"});
+        civ.push({type:"SUMMARY", mode:"AUTO"});
+        return [...map, ...civ];
+      }
+
+      // BO7
+      // map: P1 Ban, P2 ban, (P1 pick, P2 pick) x4, Random Pick
+      map.push({type:"MAP_BAN", mode:"TURN", by:"P1"});
+      map.push({type:"MAP_BAN", mode:"TURN", by:"P2"});
+      for(let i=0;i<4;i++){
+        map.push({type:"MAP_PICK", mode:"TURN", by:"P1"});
+        map.push({type:"MAP_PICK", mode:"TURN", by:"P2"});
+      }
+      map.push({type:"MAP_RANDOM", mode:"AUTO"});
+
+      // civ: pick 8 simultâneo, REVEAL, SNIPE(1) simultâneo, REVEAL, ASSIGN, SUMMARY
+      civ.push({type:"CIV_PICK", mode:"SIMUL", count:8});
+      civ.push({type:"CIV_REVEAL", mode:"AUTO"});
+      civ.push({type:"CIV_SNIPE", mode:"SIMUL", count:1});
+      civ.push({type:"CIV_REVEAL", mode:"AUTO"});
+      civ.push({type:"ASSIGN", mode:"SIMUL"});
+      civ.push({type:"SUMMARY", mode:"AUTO"});
+
+      return [...map, ...civ];
+    }
+
+    $("create").addEventListener("click", async () => {
+      const series = $("series").value;
+      const maps = lines($("maps").value);
+      const civs = lines($("civs").value);
+
+      if(maps.length < 5){
+        $("out").innerHTML = `<div class="bad">Pool de mapas muito pequena.</div>`;
+        return;
+      }
+      if(civs.length < 8){
+        $("out").innerHTML = `<div class="bad">Pool de civs muito pequena.</div>`;
+        return;
+      }
+
+      const config = { series, maps, civs, flow: flowFor(series) };
+
+      const r = await fetch("/api/rooms", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(config)
+      });
+      const j = await r.json();
+      if(!j.ok){
+        $("out").innerHTML = `<div class="bad">Erro: ${j.error}</div>`;
+        return;
+      }
+
+      const id = j.id;
+      const p1 = `${location.origin}/room.html?id=${id}&role=P1`;
+      const p2 = `${location.origin}/room.html?id=${id}&role=P2`;
+
+      $("out").innerHTML = `
+        <div class="okBox">
+          <div><strong>ID:</strong> <span class="mono">${id}</span></div>
+          <div class="mt2"><strong>Jogador #1:</strong> <a target="_blank" href="${p1}">${p1}</a></div>
+          <div class="mt1"><strong>Jogador #2:</strong> <a target="_blank" href="${p2}">${p2}</a></div>
+        </div>
+      `;
+    });
+  </script>
+</body>
+</html>
