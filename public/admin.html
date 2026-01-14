@@ -59,12 +59,14 @@ Continental
 Dry_River
 Excavation
 Four_Lakes
+Frisian_Marshes
 Glade
 Golden_Pit
 Golden_Swamp
 Gorge
 Haywire
 Hideout
+Holy_Island
 Kawasan
 Kerlaugar
 King_of_the_Hill
@@ -73,8 +75,10 @@ Migration
 Mountain_Pass
 Oasis
 Prairie
+Relic_River
 Scandinavia
 Socotra
+Sunkenlands
 Volcanic_Island
 Wetlands
 Wilderness
@@ -167,6 +171,8 @@ Sultanato_Deli
         map.push({type:"MAP_BAN", mode:"TURN", by:"P2"});
         map.push({type:"MAP_PICK", mode:"TURN", by:"P1"});
         map.push({type:"MAP_PICK", mode:"TURN", by:"P2"});
+		map.push({type:"MAP_BAN", mode:"TURN", by:"P1"});
+        map.push({type:"MAP_BAN", mode:"TURN", by:"P2"});
         map.push({type:"MAP_RANDOM", mode:"AUTO"});
         // civ: pick 4 simultâneo, REVEAL, SNIPE(1) simultâneo, REVEAL, ASSIGN, SUMMARY
         civ.push({type:"CIV_PICK", mode:"SIMUL", count:4});
@@ -260,4 +266,5 @@ Sultanato_Deli
   </script>
 </body>
 </html>
+
 
