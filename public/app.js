@@ -55,17 +55,31 @@ function instructionText(room){
 
   if(!step) return "—";
 
-  if(step.type === "MAP_BAN"){
-    return `Sua vez: BANIR 1 MAPA` + (step.mode==="TURN" ? (step.by===MY_ROLE ? "" : " (aguarde)") : "");
+if(step.type === "MAP_BAN"){
+  if(step.mode === "TURN"){
+    return step.by === MY_ROLE
+      ? "Sua vez: BANIR 1 MAPA"
+      : "Vez do oponente: BANIR 1 MAPA";
   }
+  return "BANIR 1 MAPA";
+}
 
-  if(step.type === "MAP_PICK"){
-    return `Sua vez: ESCOLHER 1 MAPA` + (step.mode==="TURN" ? (step.by===MY_ROLE ? "" : " (aguarde)") : "");
+if(step.type === "MAP_PICK"){
+  if(step.mode === "TURN"){
+    return step.by === MY_ROLE
+      ? "Sua vez: ESCOLHER 1 MAPA"
+      : "Vez do oponente: ESCOLHER 1 MAPA";
   }
+  return "ESCOLHER 1 MAPA";
+}
 
-  if(step.type === "CIV_BAN"){
-    return `Sua vez: BANIR 1 CIV` + (step.by===MY_ROLE ? "" : " (aguarde)");
-  }
+
+if(step.type === "CIV_BAN"){
+  return step.by === MY_ROLE
+    ? "Sua vez: BANIR 1 CIV"
+    : "Vez do oponente: BANIR 1 CIV";
+}
+
 
   if(step.type === "CIV_PICK"){
     const need = step.count || 1;
