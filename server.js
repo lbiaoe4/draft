@@ -21,6 +21,59 @@ app.use(express.static(path.join(__dirname, "public")));
 const rooms = new Map();
 
 
+// ===== Discord Webhook (notificação + imagem do resumo) =====
+// Configure no Render: DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/...."
+// IMPORTANTE: não commite essa URL no GitHub.
+async function sendDiscordSummaryImage({ roomId, bufferPng, series = null }) {
+  const url = process.env.DISCORD_WEBHOOK_URL;
+  if (!url) return; // sem webhook configurado, não faz nada
+
+  // Node 18+ (Render) normalmente já tem fetch/FormData/Blob globais.
+  // Se seu serviço estiver em Node < 18, defina a versão do Node no Render para 18+.
+  if (typeof fetch !== "function" || typeof FormData === "undefined" || typeof Blob === "undefined") {
+    console.warn("Discord webhook: ambiente sem fetch/FormData/Blob. Use Node 18+ no Render.");
+    return;
+  }
+
+  const form = new FormData();
+
+  const payload = {
+    username: "LBI Draft Bot",
+    content: `✅ Draft concluído — Sala/ID: ${roomId}`,
+    embeds: [
+      {
+        title: "Draft concluído",
+        description: `Sala/ID: **${roomId}**`,
+        color: 0x22c55e,
+        fields: series ? [{ name: "Série", value: String(series), inline: true }] : [],
+        image: { url: "attachment://draft.png" },
+        timestamp: new Date().toISOString(),
+      },
+    ],
+  };
+
+  form.append("payload_json", JSON.stringify(payload));
+  form.append("file", new Blob([bufferPng], { type: "image/png" }), "draft.png");
+
+  try {
+    const resp = await fetch(url, { method: "POST", body: form });
+    if (!resp.ok) {
+      const t = await resp.text().catch(() => "");
+      console.warn("Discord webhook respondeu com erro:", resp.status, t.slice(0, 200));
+    }
+  } catch (err) {
+    console.error("Discord webhook error:", err?.message || err);
+  }
+}
+
+function dataUrlToPngBuffer(dataUrl) {
+  // data:image/png;base64,....
+  const m = /^data:image\/(png|jpeg|jpg);base64,(.+)$/i.exec(String(dataUrl || ""));
+  if (!m) return null;
+  return Buffer.from(m[2], "base64");
+}
+
+
 // ===== timer & confirmação =====
 const TURN_SECONDS = 30;
 
@@ -256,7 +309,7 @@ app.get("/api/admin/rooms/:id", (req, res) => {
 });
 
 // recebe a imagem do resumo gerada no client
-app.post("/api/rooms/:id/summary", (req, res) => {
+app.post("/api/rooms/:id/summary", async (req, res) => {
   const room = getRoom(req.params.id);
   if (!room) return res.status(404).json({ error: "ROOM_NOT_FOUND" });
 
@@ -269,6 +322,20 @@ app.post("/api/rooms/:id/summary", (req, res) => {
     dataUrl,
     savedAt: new Date().toISOString(),
   };
+
+  // 🔔 Notifica no Discord com a imagem (fire-and-forget)
+  try {
+    const buf = dataUrlToPngBuffer(dataUrl);
+    if (buf) {
+      sendDiscordSummaryImage({
+        roomId: room.id,
+        bufferPng: buf,
+        series: room.config?.series || null,
+      });
+    }
+  } catch (e) {
+    console.warn("Falha ao enviar resumo para o Discord:", String(e?.message || e));
+  }
 
   res.json({ ok: true });
 });
