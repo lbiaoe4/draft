@@ -25,7 +25,7 @@ const rooms = new Map();
 // Configure no Render: DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/...."
 // IMPORTANTE: não commite essa URL no GitHub.
 async function sendDiscordSummaryImage({ roomId, bufferPng, series = null }) {
-  const url = "https://discord.com/api/webhooks/1461155771516457118/wEhlvfPnD4QPhmhjHORpINF3HRc9GulPdbcYn4VVDUFb_8VJ6PjDNicN_F5HeaHGvmhG";
+  const url = process.env.DISCORD_WEBHOOK_URL;
   if (!url) return; // sem webhook configurado, não faz nada
 
   // Node 18+ (Render) normalmente já tem fetch/FormData/Blob globais.
