@@ -75,7 +75,7 @@ function dataUrlToPngBuffer(dataUrl) {
 
 
 // ===== timer & confirmação =====
-const TURN_SECONDS = 30;
+const TURN_SECONDS = 50;
 
 function nowMs() { return Date.now(); }
 
