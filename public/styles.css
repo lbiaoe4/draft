@@ -13,6 +13,13 @@
 
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
+
+/* Mais densidade em desktop (FullHD) */
+html{ font-size: 80%; }
+@media (min-width: 1200px){
+  html{ font-size: 70%; }
+}
+
 body{
   margin:0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -372,13 +379,14 @@ input:focus, select:focus, textarea:focus{
   border-radius: 16px;
   background:#fff;
   overflow:hidden;
-  padding: 7px 7px 9px;
+  padding: 6px 6px 8px;
   text-align:center;
 }
 
 .iconImg{
-  width:108px;
-  height:108px;
+  /* menor para caber 8-10 colunas em FullHD */
+  width:96px;
+  height:96px;
   object-fit:cover;
   border-radius: 14px;
   display:block;
@@ -388,7 +396,7 @@ input:focus, select:focus, textarea:focus{
 
 .iconLabel{
   margin-top: 6px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 900;
   color: rgba(11,18,32,.78);
   text-transform: uppercase;
@@ -398,9 +406,11 @@ input:focus, select:focus, textarea:focus{
 .miniRow{
   display:flex;
   gap: 10px;
-  justify-content:center;
+  justify-content:flex-start;
+  align-content:flex-start;
   flex-wrap:wrap;
-  min-height: 92px;
+  /* espaço suficiente para 4 itens + labels mesmo com nome grande */
+  min-height: 260px;
 }
 
 .hiddenCard{

@@ -941,6 +941,13 @@ function render(room){
   const joinBox = document.getElementById("joinBox");
   if(joinBox) joinBox.classList.add("hidden");
 
+  // observer.html não tem readyBox e o draftBox começa oculto.
+  // Garanta que o observer sempre veja a tela do draft após conectar.
+  const draftBox = document.getElementById("draftBox");
+  if(draftBox && MY_ROLE === "OBS"){
+    draftBox.classList.remove("hidden");
+  }
+
   setText("hdrId", room.id);
   setText("hdrSeries", room.config.series);
   // room.html tem este campo; observer.html não
