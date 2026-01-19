@@ -8,13 +8,47 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="title">
-      <img class="brandLogo" src="imgs/lbi-logo.png" alt="LBI" />
-      <span>LBI • Draft</span>
+     <div class="title" style="display:flex;align-items:center;gap:10px">
+      <a href="index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit">
+        <img src="imgs/lbi-logo.png" alt="LBI" style="width:34px;height:34px;object-fit:contain;border-radius:10px" />
+        <span>LBI • Draft</span>
     </a>
   </header>
 
   <main class="wrap">
+
+    <section class="panel mt">
+  <h2 class="h2">Como funciona o Draft</h2>
+
+  <div class="muted" style="line-height:1.6">
+    <p>
+      O sistema de draft da <strong>LBI</strong> segue regras automáticas de acordo com o formato da série
+      escolhida pelo organizador.
+    </p>
+
+    <p><strong>Configuração por formato:</strong></p>
+
+    <ul>
+      <li><strong>BO1</strong> — banimento simples de mapas e escolha direta do mapa final.</li>
+      <li><strong>BO3</strong> — banimentos alternados, último mapa definido por sorteio, escolha de civilizações e snipe.</li>
+      <li><strong>BO5</strong> — mais etapas de ban/pick, maior pool de mapas e civilizações.</li>
+      <li><strong>BO7</strong> — formato completo, com múltiplas escolhas do perdedor e pool ampliado.</li>
+    </ul>
+
+    <p>
+      O <strong>último mapa randomizado</strong> é sempre considerado o
+      <strong>GAME 1 (mapa inicial)</strong>.
+      Os demais mapas são jogados como <strong>escolha do perdedor</strong>.
+    </p>
+
+    <p>
+      ⏱️ <strong>Atenção:</strong> cada draft expira automaticamente após
+      <strong>5 minutos de inatividade</strong>.
+      Caso isso aconteça, será necessário criar um novo draft.
+    </p>
+  </div>
+</section>
+
     <section class="panel">
       <h1 class="title">Menu</h1>
       <div class="menuGrid">
@@ -36,6 +70,36 @@
         </a>
       </div>
     </section>
+
+<section class="panel mt">
+  <h2 class="h2">Tutorial em Vídeo</h2>
+
+  <div class="muted center" style="margin-bottom:12px">
+    Assista ao vídeo abaixo para entender todo o processo de criação, participação e observação do draft.
+  </div>
+
+  <div style="
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    aspect-ratio: 16 / 9;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,.15);
+  ">
+    <iframe
+      src="https://www.youtube.com/embed/SEU_VIDEO_AQUI"
+      title="Tutorial Draft LBI"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+      style="width:100%; height:100%; border:0;"
+    ></iframe>
+  </div>
+</section>
+
+
   </main>
 </body>
 </html>
