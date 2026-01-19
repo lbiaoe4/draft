@@ -28,12 +28,67 @@
 
     <p><strong>Configuração por formato:</strong></p>
 
-    <ul>
-      <li><strong>BO1</strong> — banimento simples de mapas e escolha direta do mapa final.</li>
-      <li><strong>BO3</strong> — banimentos alternados, último mapa definido por sorteio, escolha de civilizações e snipe.</li>
-      <li><strong>BO5</strong> — mais etapas de ban/pick, maior pool de mapas e civilizações.</li>
-      <li><strong>BO7</strong> — formato completo, com múltiplas escolhas do perdedor e pool ampliado.</li>
-    </ul>
+<ul>
+  <li>
+    <strong>BO1</strong> —
+    <br>
+    <strong>Mapas:</strong> banimentos alternados entre P1 e P2 até restar apenas um mapa, que será jogado.
+    <br>
+    <strong>Civilizações:</strong> livres (não há pick nem snipe).
+  </li>
+
+  <li>
+    <strong>BO3</strong> —
+    <br>
+    <strong>Mapas:</strong>
+    P1 bane 1 mapa → P2 bane 1 mapa → P1 bane 1 mapa → P2 bane 1 mapa →
+    último mapa restante é randomizado e definido como <strong>GAME 1</strong>.
+    Os demais jogos são <strong>escolha do perdedor</strong>.
+    <br>
+    <strong>Civilizações:</strong>
+    P1 escolhe 3 civs → P2 escolhe 3 civs →
+    snipe simultâneo (cada jogador remove 1 civ do oponente),
+    resultando em 2 civs disponíveis por jogador.
+    <br>
+    <em>Assign por mapa é opcional, caso ambos aceitem.</em>
+  </li>
+
+  <li>
+    <strong>BO5</strong> —
+    <br>
+    <strong>Mapas:</strong>
+    P1 bane 1 mapa → P2 bane 1 mapa →
+    P1 escolhe 1 mapa → P2 escolhe 1 mapa →
+    último mapa restante é randomizado e definido como <strong>GAME 1</strong>.
+    Os demais jogos são <strong>escolha do perdedor</strong>.
+    <br>
+    <strong>Civilizações:</strong>
+    P1 escolhe 4 civs → P2 escolhe 4 civs →
+    snipe simultâneo (cada jogador remove 1 civ do oponente),
+    resultando em 3 civs disponíveis por jogador.
+    <br>
+    <em>Assign por mapa é opcional, caso ambos aceitem.</em>
+  </li>
+
+  <li>
+    <strong>BO7</strong> —
+    <br>
+    <strong>Mapas:</strong>
+    P1 bane 1 mapa → P2 bane 1 mapa →
+    P1 escolhe 1 mapa → P2 escolhe 1 mapa →
+    P1 escolhe 1 mapa → P2 escolhe 1 mapa →
+    último mapa restante é randomizado e definido como <strong>GAME 1</strong>.
+    Os demais jogos são <strong>escolha do perdedor</strong>.
+    <br>
+    <strong>Civilizações:</strong>
+    P1 escolhe 5 civs → P2 escolhe 5 civs →
+    snipe simultâneo (cada jogador remove 1 civ do oponente),
+    resultando em 4 civs disponíveis por jogador.
+    <br>
+    <em>Assign por mapa é opcional, caso ambos aceitem.</em>
+  </li>
+</ul>
+
 
     <p>
       O <strong>último mapa randomizado</strong> é sempre considerado o
@@ -43,7 +98,7 @@
 
     <p>
       ⏱️ <strong>Atenção:</strong> cada draft expira automaticamente após
-      <strong>5 minutos de inatividade</strong>.
+      <strong>15 minutos de inatividade</strong>.
       Caso isso aconteça, será necessário criar um novo draft.
     </p>
   </div>
@@ -89,7 +144,7 @@
     border: 1px solid rgba(0,0,0,.15);
   ">
     <iframe
-      src="https://www.youtube.com/embed/SEU_VIDEO_AQUI"
+      src="https://www.youtube.com/watch?v=aRegZKWox5A"
       title="Tutorial Draft LBI"
       frameborder="0"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
