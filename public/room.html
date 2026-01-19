@@ -20,10 +20,15 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">
-      <span class="logoDot"></span>
+    <a class="brand" href="index.html" title="Voltar ao menu">
+      <img class="brandLogo" src="imgs/lbi-logo.png" alt="LBI" />
       <span>SELETOR DE MAPAS E CIVILIZAÇÕES LBI</span>
-    </div>
+    </a>
+    <nav class="links">
+      <a class="ghost" href="index.html">Menu</a>
+      <a class="ghost" href="admin.html" target="_blank">Criar draft</a>
+      <a class="ghost" href="observer.html" target="_blank">Observar</a>
+    </nav>
   </header>
 
   <main class="wrap">
@@ -64,6 +69,8 @@
           <div class="readyItem"><span class="dot amber"></span> Jogador #2: <strong id="rP2">—</strong></div>
         </div>
 
+        <div class="mt2 muted">Nome do jogador (opcional)</div>
+        <input id="playerName" placeholder="Deixe vazio para manter 'Jogador #'" maxlength="24" />
         <div class="mt2 muted">Pressione quando estiver pronto</div>
         <button id="readyBtn" class="btn primary mt2">PRONTO</button>
       </div>

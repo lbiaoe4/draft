@@ -29,6 +29,7 @@ function stepText(step){
   if(step.type === "CIV_PICK") return "CIV • PICK (SIMULTÂNEO)";
   if(step.type === "CIV_REVEAL") return "CIV • REVEAL";
   if(step.type === "CIV_SNIPE") return "CIV • SNIPE (SIMULTÂNEO)";
+  if(step.type === "ASSIGN_DECIDE") return "ASSIGN • CONFIRMAR";
   if(step.type === "ASSIGN") return "ASSIGN • CIV POR MAPA";
   if(step.type === "SUMMARY") return "RESUMO";
   return step.type;
@@ -37,6 +38,11 @@ function stepText(step){
 function instructionText(room){
   const st = room.state;
   const step = room.config.flow[st.stepIndex];
+
+  if(MY_ROLE === "OBS"){
+    if(!st.started) return "Observando… aguardando ambos jogadores ficarem PRONTOS.";
+    if(st.confirm?.needed) return "Observando… aguardando confirmação dos jogadores.";
+  }
 
   if(!st.started){
     return "Aguardando ambos jogadores ficarem PRONTOS.";
@@ -106,6 +112,13 @@ if(step.type === "CIV_BAN"){
     return `ASSIGN: selecione uma CIV sua para cada MAPA (sem repetir)`;
   }
 
+  if(step.type === "ASSIGN_DECIDE"){
+    const mine = st.assignDecide?.[MY_ROLE];
+    if(mine === true) return "Você votou SIM ✅ aguardando o oponente…";
+    if(mine === false) return "Você votou NÃO ✅ aguardando o oponente…";
+    return "Desejam selecionar civilizações por mapa? (ambos precisam marcar SIM)";
+  }
+
   if(step.type === "CIV_REVEAL"){
     return `REVEAL: civs reveladas`;
   }
@@ -168,6 +181,7 @@ function currentStep(room){
 }
 
 function isMyTurn(room){
+  if(MY_ROLE === "OBS") return false;
   if(room.state.confirm?.needed) return false;
   const step = currentStep(room);
   if(!step) return false;
@@ -370,6 +384,53 @@ function renderPool(room){
   // Decide o que é clicável no momento
   const clickable = isMyTurn(room);
 
+  // ASSIGN DECIDE
+  if(step.type === "ASSIGN_DECIDE"){
+    $("poolTitle").textContent = "ASSIGN";
+    const box = document.createElement("div");
+    box.className = "panel";
+    box.style.borderRadius = "18px";
+    box.innerHTML = `<div class="center"><div class="instruction" style="margin:0">Desejam selecionar as civilizações para cada mapa?</div><div class="muted small mt1">Ambos devem marcar <strong>SIM</strong> para habilitar o ASSIGN.</div></div>`;
+    pool.appendChild(box);
+
+    const mine = st.assignDecide?.[MY_ROLE];
+    if(MY_ROLE === "OBS"){
+      const m = document.createElement("div");
+      m.className = "muted mt1";
+      m.textContent = "(Observer) aguardando decisão dos jogadores…";
+      pool.appendChild(m);
+      return;
+    }
+
+    const row = document.createElement("div");
+    row.className = "joinGrid";
+    row.style.gridTemplateColumns = "1fr 1fr";
+    row.style.marginTop = "12px";
+
+    const yes = document.createElement("button");
+    yes.className = "btn primary w100";
+    yes.textContent = mine === true ? "SIM ✅" : "SIM";
+    yes.disabled = mine !== null;
+    yes.addEventListener("click", () => {
+      socket.emit("draft:action", { roomId: ROOM_ID, action: { by: MY_ROLE, kind: "ASSIGN_DECIDE", choice: true } });
+    });
+
+    const no = document.createElement("button");
+    no.className = "btn w100";
+    no.textContent = mine === false ? "NÃO ✅" : "NÃO";
+    no.disabled = mine !== null;
+    no.addEventListener("click", () => {
+      socket.emit("draft:action", { roomId: ROOM_ID, action: { by: MY_ROLE, kind: "ASSIGN_DECIDE", choice: false } });
+    });
+
+    row.appendChild(yes);
+    row.appendChild(no);
+    pool.appendChild(row);
+    return;
+  }
+
+  
+
   // MAP BAN / MAP PICK
   if(step.type === "MAP_BAN" || step.type === "MAP_PICK"){
     $("poolTitle").textContent = "MAPAS";
@@ -553,6 +614,12 @@ async function drawSummary(room){
   ctx.font = "bold 26px system-ui";
   ctx.fillText(`ID: ${room.id}   |   Série: ${room.config.series}`, 40, 115);
 
+  const p1Label = room.state.players?.P1?.name?.trim() || "Jogador #1";
+  const p2Label = room.state.players?.P2?.name?.trim() || "Jogador #2";
+  ctx.font = "600 20px system-ui";
+  ctx.fillStyle = "rgba(11,18,32,.75)";
+  ctx.fillText(`P1: ${p1Label}   |   P2: ${p2Label}`, 40, 150);
+
   // helper to load image
   const loadImg = (src) => new Promise((resolve) => {
     const img = new Image();
@@ -561,8 +628,9 @@ async function drawSummary(room){
     img.src = src;
   });
 
-  const maps = room.state.maps.picked;
-  let slots = room.state.assign.byMap || [];
+  const maps = room.state.maps.picked || [];
+  const assignEnabled = room.state.assign?.enabled !== false;
+  let slots = (assignEnabled ? (room.state.assign.byMap || []) : []);
   // BO1 (ou séries sem ASSIGN): usa picks diretos como "atribuição" do único mapa
   if((!slots || slots.length === 0) && Array.isArray(room.state.maps?.picked) && room.state.maps.picked.length === 1){
     const c1 = room.state.civs?.pickedBy?.P1?.[0] || null;
@@ -571,14 +639,19 @@ async function drawSummary(room){
   }
 
   // layout
-  const startY = 170;
+  const startY = 190;
   const cardW = 420;
   const cardH = 180;
   const gapX = 30;
   const gapY = 25;
 
+  // Ordem: o mapa randomizado por último (último da lista) vira GAME 1
+  const order = maps.map((m, idx) => ({ map: m, idx }))
+    .sort((a,b) => (a.idx === maps.length-1 ? -1 : 0) - (b.idx === maps.length-1 ? -1 : 0));
+
   const cols = 3;
-  for(let i=0;i<maps.length;i++){
+  for(let i=0;i<order.length;i++){
+    const item = order[i];
     const col = i % cols;
     const row = Math.floor(i / cols);
 
@@ -592,7 +665,7 @@ async function drawSummary(room){
     ctx.stroke();
 
     // map image
-    const mapName = maps[i];
+    const mapName = item.map;
     const mapSlug = slugify(mapName);
     const mapTry = [`imgs/maps/${mapSlug}.jpg`, `imgs/${mapSlug}.jpg`];
     let mapImg = await loadImg(mapTry[0]);
@@ -611,7 +684,13 @@ async function drawSummary(room){
     ctx.fillText(mapName, x+160, y+44);
 
     // assignments
-    const a = slots[i] || {P1:null,P2:null};
+    const a = slots[item.idx] || {P1:null,P2:null};
+
+    // label (game 1 vs escolha do perdedor)
+    ctx.fillStyle = "rgba(11,18,32,.65)";
+    ctx.font = "bold 14px system-ui";
+    const isGame1 = (item.idx === maps.length - 1);
+    ctx.fillText(isGame1 ? "GAME 1" : "ESCOLHA DO PERDEDOR", x+160, y+64);
 
     // P1 civ (com ícone)
     ctx.font = "bold 16px system-ui";
@@ -649,6 +728,23 @@ async function drawSummary(room){
       ctx.fillStyle = "#0b1220";
       ctx.fillText(p2Name, x+205, y+120);
     }
+  }
+
+  // Se não houve ASSIGN, adiciona um bloco simples com pool de civs + snipes
+  if(!assignEnabled){
+    const baseY = canvas.height - 150;
+    ctx.fillStyle = "rgba(11,18,32,.85)";
+    ctx.font = "bold 18px system-ui";
+    ctx.fillText("Sem ASSIGN por mapa — pool final", 40, baseY);
+    ctx.font = "16px system-ui";
+    const p1 = (room.state.civs?.pickedBy?.P1 || []).join(", ");
+    const p2 = (room.state.civs?.pickedBy?.P2 || []).join(", ");
+    const s1 = (room.state.civs?.snipedBy?.P2 || []).join(", ");
+    const s2 = (room.state.civs?.snipedBy?.P1 || []).join(", ");
+    ctx.fillText(`P1: ${p1 || "—"}`, 40, baseY+28);
+    ctx.fillText(`P2: ${p2 || "—"}`, 40, baseY+52);
+    ctx.fillText(`Snipes (P1 perdeu): ${s1 || "—"}`, 40, baseY+76);
+    ctx.fillText(`Snipes (P2 perdeu): ${s2 || "—"}`, 40, baseY+100);
   }
 
   // show image
@@ -697,20 +793,34 @@ function render(room){
   $("rid").textContent = room.id;
   $("hdrStep").textContent = (room.state.confirm?.needed && room.state.confirm.reason==="MAP_TO_CIV") ? "MAPAS DEFINIDOS" : stepText(currentStep(room));
 
-  $("who").innerHTML = MY_ROLE === "P1"
-    ? `<span class="dot green"></span> Você é o <strong>JOGADOR #1</strong>`
-    : `<span class="dot amber"></span> Você é o <strong>JOGADOR #2</strong>`;
+  const p1Name = room.state.players?.P1?.name?.trim() ? room.state.players.P1.name.trim() : "Jogador #1";
+  const p2Name = room.state.players?.P2?.name?.trim() ? room.state.players.P2.name.trim() : "Jogador #2";
+  if($("who")){
+    if(MY_ROLE === "OBS"){
+      $("who").innerHTML = `<span class="dot"></span> Você está como <strong>OBSERVER</strong>`;
+    } else {
+      $("who").innerHTML = MY_ROLE === "P1"
+        ? `<span class="dot green"></span> Você é o <strong>${p1Name}</strong>`
+        : `<span class="dot amber"></span> Você é o <strong>${p2Name}</strong>`;
+    }
+  }
 
-  $("rP1").textContent = room.state.ready.P1 ? "PRONTO" : "AGUARDANDO";
-  $("rP2").textContent = room.state.ready.P2 ? "PRONTO" : "AGUARDANDO";
+  if($("rP1")) $("rP1").textContent = room.state.ready.P1 ? `PRONTO (${p1Name})` : `AGUARDANDO (${p1Name})`;
+  if($("rP2")) $("rP2").textContent = room.state.ready.P2 ? `PRONTO (${p2Name})` : `AGUARDANDO (${p2Name})`;
 
   // show ready box until started
-  if(!room.state.started){
-    $("readyBox").classList.remove("hidden");
-    $("draftBox").classList.add("hidden");
-  } else {
-    $("readyBox").classList.add("hidden");
-    $("draftBox").classList.remove("hidden");
+  if($("readyBox") && $("draftBox")){
+    if(MY_ROLE === "OBS"){
+      // observer sempre vê a tela do draft (mesmo antes de começar)
+      $("readyBox").classList.add("hidden");
+      $("draftBox").classList.remove("hidden");
+    } else if(!room.state.started){
+      $("readyBox").classList.remove("hidden");
+      $("draftBox").classList.add("hidden");
+    } else {
+      $("readyBox").classList.add("hidden");
+      $("draftBox").classList.remove("hidden");
+    }
   }
 
   // instruction
@@ -785,9 +895,10 @@ function render(room){
 }
 
 // Join / Ready
-$("join").addEventListener("click", () => {
+$("join")?.addEventListener("click", () => {
   const id = $("roomId").value.trim().toUpperCase();
-  const role = $("role").value;
+  const roleEl = $("role");
+  const role = roleEl ? roleEl.value : "OBS";
 
   if(!id) return setStatus("Informe o ID.", false);
 
@@ -798,12 +909,13 @@ $("join").addEventListener("click", () => {
   setStatus("Conectando…", true);
 });
 
-$("readyBtn").addEventListener("click", () => {
+$("readyBtn")?.addEventListener("click", () => {
   if(!ROOM_ID) return;
-  socket.emit("draft:action", { roomId: ROOM_ID, action: { by: MY_ROLE, kind: "READY" } });
+  const name = $("playerName") ? $("playerName").value : "";
+  socket.emit("draft:action", { roomId: ROOM_ID, action: { by: MY_ROLE, kind: "READY", name } });
 });
 
-$("confirmBtn").addEventListener("click", () => {
+$("confirmBtn")?.addEventListener("click", () => {
   if(!ROOM_ID) return;
   socket.emit("draft:action", { roomId: ROOM_ID, action: { by: MY_ROLE, kind: "CONFIRM" } });
 });
@@ -828,8 +940,8 @@ socket.on("room:state", ({ room }) => {
 // auto-fill querystring
 (() => {
   const { id, role } = qs();
-  if(id) $("roomId").value = id;
-  if(role === "P1" || role === "P2") $("role").value = role;
+  if(id && $("roomId")) $("roomId").value = id;
+  if((role === "P1" || role === "P2" || role === "OBS") && $("role")) $("role").value = role;
 })();
 
 
@@ -840,5 +952,5 @@ setInterval(() => {
   if(!ROOM.state?.timer?.endsAt) return;
   const left = Math.max(0, Math.ceil((ROOM.state.timer.endsAt - Date.now())/1000));
   const baseInstr = instructionText(ROOM);
-  $("instruction").textContent = baseInstr + ` • ⏱ ${left}s`;
+  if($("instruction")) $("instruction").textContent = baseInstr + ` • ⏱ ${left}s`;
 }, 250);

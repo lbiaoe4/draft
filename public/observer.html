@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LBI • Draft • Observer</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html { font-size: 80%; }
+    .wrap { max-width: 980px; }
+    .iconImg { width: 110px; height: 110px; }
+    .iconCard { padding: 8px; }
+    .poolSep { grid-column: 1 / -1; font-size: .9em; opacity: .8; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html" title="Voltar ao menu">
+      <img class="brandLogo" src="imgs/lbi-logo.png" alt="LBI" />
+      <span>OBSERVER • LBI Draft</span>
+    </a>
+    <nav class="links">
+      <a class="ghost" href="index.html">Menu</a>
+      <a class="ghost" href="room.html">Entrar em sala</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section id="joinBox" class="panel">
+      <h1 class="title">Observar partida</h1>
+      <div class="joinGrid" style="grid-template-columns: 1fr .6fr;">
+        <div class="field">
+          <label>ID da partida</label>
+          <input id="roomId" class="mono" placeholder="Ex: 2A6F9B" />
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button id="join" class="btn primary w100">ENTRAR</button>
+        </div>
+      </div>
+      <!-- role fixo -->
+      <input id="role" type="hidden" value="OBS" />
+      <div id="status" class="status muted">Aguardando…</div>
+    </section>
+
+    <!-- DRAFT (mesma UI, só leitura) -->
+    <section id="draftBox" class="mt hidden">
+      <div class="panel">
+        <div class="hdr">
+          <div class="hdrLeft">
+            <div class="hdrBig">ID: <span id="hdrId" class="mono"></span></div>
+            <div class="muted">Série: <span id="hdrSeries"></span></div>
+          </div>
+          <div class="hdrRight">
+            <div class="hdrStep" id="hdrStep">—</div>
+          </div>
+        </div>
+
+        <div id="who" class="whoLine"></div>
+
+        <div class="readyStatus">
+          <div class="readyItem"><span class="dot green"></span> P1: <strong id="rP1">—</strong></div>
+          <div class="readyItem"><span class="dot amber"></span> P2: <strong id="rP2">—</strong></div>
+        </div>
+
+        <div id="instruction" class="instruction"></div>
+      </div>
+
+      <!-- Boards -->
+      <section id="boardsBox" class="panel mt">
+        <div class="boards">
+          <div class="board">
+            <div class="boardHead"><span class="dot green"></span> P1</div>
+            <div class="boardRow" id="p1Sel"></div>
+            <div class="boardRow" id="p1Ban"></div>
+          </div>
+
+          <div class="board">
+            <div class="boardHead"><span class="dot amber"></span> P2</div>
+            <div class="boardRow" id="p2Sel"></div>
+            <div class="boardRow" id="p2Ban"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pool -->
+      <section class="panel mt poolPanel">
+        <h2 class="h2" id="poolTitle">POOL</h2>
+        <div id="pool" class="poolGrid"></div>
+      </section>
+
+      <!-- Assign maps -->
+      <section id="assignMaps" class="panel mt hidden">
+        <h2 class="h2">ASSIGN</h2>
+        <div id="assignHint" class="muted center hidden">Clique em um mapa e depois escolha uma civ da sua lista.</div>
+        <div id="mapsRow" class="mapsRow"></div>
+
+        <div id="assignPools" class="assignPools hidden">
+          <div class="assignCols">
+            <div class="assignCol">
+              <div class="assignColHead">Suas civs</div>
+              <div id="myCivsPool" class="poolGrid"></div>
+            </div>
+            <div class="assignCol">
+              <div class="assignColHead">Civs do oponente</div>
+              <div id="oppCivsRow" class="poolGrid"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Summary -->
+      <section id="summaryBox" class="panel mt hidden">
+        <h2 class="h2">Resumo</h2>
+        <canvas id="summaryCanvas" width="1400" height="980" class="hidden"></canvas>
+        <img id="summaryImg" class="summaryImg" alt="Resumo" />
+        <div class="center mt2">
+          <button id="downloadSummary" class="btn">Baixar imagem</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
