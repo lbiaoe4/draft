@@ -1,6 +1,20 @@
 const socket = io();
 const $ = (id) => document.getElementById(id);
 
+// helpers (observer.html não possui todos os elementos do room.html)
+function setText(id, value){
+  const el = $(id);
+  if(el) el.textContent = value;
+}
+function showEl(id){
+  const el = $(id);
+  if(el) el.classList.remove("hidden");
+}
+function hideEl(id){
+  const el = $(id);
+  if(el) el.classList.add("hidden");
+}
+
 let ROOM_ID = "";
 let MY_ROLE = "P1";
 let ROOM = null;
@@ -628,7 +642,69 @@ async function drawSummary(room){
     img.src = src;
   });
 
+  async function loadCivIcon(civName){
+    if(!civName) return null;
+    const s = slugify(civName);
+    const tries = [`imgs/civs/${s}.jpg`, `imgs/civs/${s}.png`, `imgs/${s}.jpg`, `imgs/${s}.png`];
+    for(const t of tries){
+      const img = await loadImg(t);
+      if(img) return img;
+    }
+    return null;
+  }
+
+  function drawBadge(text, x, y){
+    ctx.font = "bold 13px system-ui";
+    const padX = 10;
+    const padY = 6;
+    const w = ctx.measureText(text).width + padX*2;
+    ctx.fillStyle = "rgba(11,18,32,.08)";
+    roundRect(ctx, x, y-16, w, 24, 10);
+    ctx.fill();
+    ctx.fillStyle = "rgba(11,18,32,.75)";
+    ctx.fillText(text, x+padX, y);
+  }
+
+  function drawCivRow(label, civs, x, y, maxW){
+    // maior para ficar visível no resumo (principalmente quando não há ASSIGN)
+    const icon = 50;
+    const gap = 10;
+    const lineH = 60;
+
+    ctx.font = "bold 17px system-ui";
+    ctx.fillStyle = "rgba(11,18,32,.85)";
+    ctx.fillText(label, x, y);
+
+    let cx = x + 58;
+    let cy = y - 32;
+    let lineY = cy;
+    const startX = cx;
+
+    (civs || []).forEach(async () => {}); // no-op (mantém lint feliz)
+    // desenha de forma sequencial (await por ícone)
+    return (async () => {
+      for(const civ of (civs || [])){
+        const img = await loadCivIcon(civ);
+        if(cx + icon > x + maxW){
+          cx = startX;
+          lineY += lineH;
+        }
+        if(img){
+          ctx.drawImage(img, cx, lineY, icon, icon);
+        } else {
+          ctx.fillStyle = "rgba(11,18,32,.10)";
+          ctx.fillRect(cx, lineY, icon, icon);
+        }
+        cx += icon + gap;
+      }
+      return lineY + lineH;
+    })();
+  }
+
   const maps = room.state.maps.picked || [];
+  const firstMap = (maps.length ? maps[maps.length-1] : "—");
+  drawBadge(`Primeiro jogo: ${firstMap}`, 40, 182);
+
   const assignEnabled = room.state.assign?.enabled !== false;
   let slots = (assignEnabled ? (room.state.assign.byMap || []) : []);
   // BO1 (ou séries sem ASSIGN): usa picks diretos como "atribuição" do único mapa
@@ -639,15 +715,16 @@ async function drawSummary(room){
   }
 
   // layout
-  const startY = 190;
+  const startY = 210;
   const cardW = 420;
   const cardH = 180;
   const gapX = 30;
   const gapY = 25;
 
   // Ordem: o mapa randomizado por último (último da lista) vira GAME 1
-  const order = maps.map((m, idx) => ({ map: m, idx }))
-    .sort((a,b) => (a.idx === maps.length-1 ? -1 : 0) - (b.idx === maps.length-1 ? -1 : 0));
+  const order = maps.length <= 1
+    ? maps.map((m, idx) => ({ map: m, idx }))
+    : [{ map: maps[maps.length-1], idx: maps.length-1 }, ...maps.slice(0, maps.length-1).map((m, idx) => ({ map: m, idx }))];
 
   const cols = 3;
   for(let i=0;i<order.length;i++){
@@ -667,9 +744,12 @@ async function drawSummary(room){
     // map image
     const mapName = item.map;
     const mapSlug = slugify(mapName);
-    const mapTry = [`imgs/maps/${mapSlug}.jpg`, `imgs/${mapSlug}.jpg`];
-    let mapImg = await loadImg(mapTry[0]);
-    if(!mapImg) mapImg = await loadImg(mapTry[1]);
+    const mapTry = [`imgs/maps/${mapSlug}.jpg`, `imgs/maps/${mapSlug}.png`, `imgs/${mapSlug}.jpg`, `imgs/${mapSlug}.png`];
+    let mapImg = null;
+    for(const t of mapTry){
+      mapImg = await loadImg(t);
+      if(mapImg) break;
+    }
 
     if(mapImg){
       ctx.drawImage(mapImg, x+18, y+18, 128, 128);
@@ -683,69 +763,78 @@ async function drawSummary(room){
     ctx.font = "bold 18px system-ui";
     ctx.fillText(mapName, x+160, y+44);
 
-    // assignments
-    const a = slots[item.idx] || {P1:null,P2:null};
-
     // label (game 1 vs escolha do perdedor)
     ctx.fillStyle = "rgba(11,18,32,.65)";
     ctx.font = "bold 14px system-ui";
     const isGame1 = (item.idx === maps.length - 1);
-    ctx.fillText(isGame1 ? "GAME 1" : "ESCOLHA DO PERDEDOR", x+160, y+64);
+    ctx.fillText(isGame1 ? "GAME 1 (MAPA INICIAL)" : "ESCOLHA DO PERDEDOR", x+160, y+64);
+
+    // assignments
+    const a = slots[item.idx] || {P1:null,P2:null};
 
     // P1 civ (com ícone)
     ctx.font = "bold 16px system-ui";
     ctx.fillStyle = "#0b7a3e";
-    ctx.fillText("P1:", x+160, y+85);
+    ctx.fillText("P1:", x+160, y+92);
 
-    const p1Name = a.P1 || "—";
-    if(a.P1){
-      const civSlug = slugify(a.P1);
-      const civTry = [`imgs/civs/${civSlug}.jpg`, `imgs/${civSlug}.jpg`];
-      let civImg = await loadImg(civTry[0]);
-      if(!civImg) civImg = await loadImg(civTry[1]);
-      if(civImg) ctx.drawImage(civImg, x+205, y+65, 34, 34);
+    if(assignEnabled && a.P1){
+      const img = await loadCivIcon(a.P1);
+      if(img) ctx.drawImage(img, x+205, y+72, 40, 40);
       ctx.fillStyle = "#0b1220";
-      ctx.fillText(p1Name, x+245, y+85);
+      ctx.fillText(a.P1, x+252, y+92);
     } else {
       ctx.fillStyle = "#0b1220";
-      ctx.fillText(p1Name, x+205, y+85);
+      ctx.fillText(assignEnabled ? "—" : "(ver pool abaixo)", x+205, y+92);
     }
 
     // P2 civ (com ícone)
     ctx.fillStyle = "#a56a00";
-    ctx.fillText("P2:", x+160, y+120);
+    ctx.fillText("P2:", x+160, y+132);
 
-    const p2Name = a.P2 || "—";
-    if(a.P2){
-      const civSlug2 = slugify(a.P2);
-      const civTry2 = [`imgs/civs/${civSlug2}.jpg`, `imgs/${civSlug2}.jpg`];
-      let civImg2 = await loadImg(civTry2[0]);
-      if(!civImg2) civImg2 = await loadImg(civTry2[1]);
-      if(civImg2) ctx.drawImage(civImg2, x+205, y+100, 34, 34);
+    if(assignEnabled && a.P2){
+      const img2 = await loadCivIcon(a.P2);
+      if(img2) ctx.drawImage(img2, x+205, y+112, 40, 40);
       ctx.fillStyle = "#0b1220";
-      ctx.fillText(p2Name, x+245, y+120);
+      ctx.fillText(a.P2, x+252, y+132);
     } else {
       ctx.fillStyle = "#0b1220";
-      ctx.fillText(p2Name, x+205, y+120);
+      ctx.fillText(assignEnabled ? "—" : "(ver pool abaixo)", x+205, y+132);
     }
   }
 
-  // Se não houve ASSIGN, adiciona um bloco simples com pool de civs + snipes
-  if(!assignEnabled){
-    const baseY = canvas.height - 150;
-    ctx.fillStyle = "rgba(11,18,32,.85)";
-    ctx.font = "bold 18px system-ui";
-    ctx.fillText("Sem ASSIGN por mapa — pool final", 40, baseY);
-    ctx.font = "16px system-ui";
-    const p1 = (room.state.civs?.pickedBy?.P1 || []).join(", ");
-    const p2 = (room.state.civs?.pickedBy?.P2 || []).join(", ");
-    const s1 = (room.state.civs?.snipedBy?.P2 || []).join(", ");
-    const s2 = (room.state.civs?.snipedBy?.P1 || []).join(", ");
-    ctx.fillText(`P1: ${p1 || "—"}`, 40, baseY+28);
-    ctx.fillText(`P2: ${p2 || "—"}`, 40, baseY+52);
-    ctx.fillText(`Snipes (P1 perdeu): ${s1 || "—"}`, 40, baseY+76);
-    ctx.fillText(`Snipes (P2 perdeu): ${s2 || "—"}`, 40, baseY+100);
-  }
+  // ===== bloco de pool + snipes (sempre) =====
+  const rows = Math.max(1, Math.ceil(order.length / cols));
+  const cardsEndY = startY + rows * cardH + (rows - 1) * gapY;
+  let baseY = cardsEndY + 55;
+
+  const p1Pool = room.state.civs?.pickedBy?.P1 || [];
+  const p2Pool = room.state.civs?.pickedBy?.P2 || [];
+  const s1 = room.state.civs?.snipedBy?.P2 || []; // P1 perdeu
+  const s2 = room.state.civs?.snipedBy?.P1 || []; // P2 perdeu
+
+  // painel de fundo para dar destaque ao pool/snipes
+  const panelX = 30;
+  const panelY = baseY - 34;
+  const panelW = canvas.width - 60;
+  const panelH = canvas.height - panelY - 30;
+  ctx.fillStyle = "rgba(11,18,32,.04)";
+  roundRect(ctx, panelX, panelY, panelW, panelH, 18);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(11,18,32,.90)";
+  ctx.font = "bold 20px system-ui";
+  ctx.fillText(assignEnabled ? "Pool final" : "Sem ASSIGN por mapa — pool final", 40, baseY);
+
+  baseY += 28;
+  baseY = await drawCivRow("P1", p1Pool, 40, baseY, canvas.width - 80);
+  baseY = await drawCivRow("P2", p2Pool, 40, baseY, canvas.width - 80);
+
+  ctx.fillStyle = "rgba(11,18,32,.90)";
+  ctx.font = "bold 20px system-ui";
+  ctx.fillText("Snipes", 40, baseY);
+  baseY += 28;
+  baseY = await drawCivRow("P1 perdeu", s1, 40, baseY, canvas.width - 80);
+  baseY = await drawCivRow("P2 perdeu", s2, 40, baseY, canvas.width - 80);
 
   // show image
   const dataUrl = canvas.toDataURL("image/png");
@@ -787,11 +876,11 @@ function render(room){
   const joinBox = document.getElementById("joinBox");
   if(joinBox) joinBox.classList.add("hidden");
 
-  $("hdrId").textContent = room.id;
-  $("hdrSeries").textContent = room.config.series;
-
-  $("rid").textContent = room.id;
-  $("hdrStep").textContent = (room.state.confirm?.needed && room.state.confirm.reason==="MAP_TO_CIV") ? "MAPAS DEFINIDOS" : stepText(currentStep(room));
+  setText("hdrId", room.id);
+  setText("hdrSeries", room.config.series);
+  // room.html tem este campo; observer.html não
+  setText("rid", room.id);
+  setText("hdrStep", (room.state.confirm?.needed && room.state.confirm.reason==="MAP_TO_CIV") ? "MAPAS DEFINIDOS" : stepText(currentStep(room)));
 
   const p1Name = room.state.players?.P1?.name?.trim() ? room.state.players.P1.name.trim() : "Jogador #1";
   const p2Name = room.state.players?.P2?.name?.trim() ? room.state.players.P2.name.trim() : "Jogador #2";
@@ -833,11 +922,11 @@ function render(room){
     const left = Math.max(0, Math.ceil((room.state.timer.endsAt - Date.now())/1000));
     timerSuffix = ` • ⏱ ${left}s`;
   }
-  $("instruction").textContent = baseInstr + timerSuffix;
+  setText("instruction", baseInstr + timerSuffix);
 
   // confirm box
   if(room.state.confirm?.needed){
-    $("confirmBox").classList.remove("hidden");
+    showEl("confirmBox");
 
     // status de confirmação (mostra também o oponente)
     const ok = room.state.confirm.ok || {P1:false,P2:false};
@@ -853,7 +942,7 @@ function render(room){
     const ct = document.getElementById("confirmText");
     if(ct) ct.textContent = msg;
   } else {
-    $("confirmBox").classList.add("hidden");
+    hideEl("confirmBox");
   }
 
 // mini rows / boards
@@ -882,15 +971,15 @@ function render(room){
     // mostra apenas o resumo (sem boards/pool/assign)
     const poolPanel = document.querySelector(".poolPanel");
     if(poolPanel) poolPanel.classList.add("hidden");
-    $("assignMaps").classList.add("hidden");
-    $("confirmBox").classList.add("hidden");
+    hideEl("assignMaps");
+    hideEl("confirmBox");
 
-    $("summaryBox").classList.remove("hidden");
+    showEl("summaryBox");
     drawSummary(room);
   } else {
     const poolPanel = document.querySelector(".poolPanel");
     if(poolPanel) poolPanel.classList.remove("hidden");
-    $("summaryBox").classList.add("hidden");
+    hideEl("summaryBox");
   }
 }
 
