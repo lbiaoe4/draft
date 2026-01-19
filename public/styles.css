@@ -338,11 +338,15 @@ input:focus, select:focus, textarea:focus{
 .poolGrid{
   margin-top: 12px;
   display:grid;
-  grid-template-columns: repeat(6, 1fr);
+  /* mais colunas em FullHD (8-10) */
+  grid-template-columns: repeat(8, 1fr);
   gap: 12px;
 }
+@media (min-width: 1400px){
+  .poolGrid{ grid-template-columns: repeat(10, 1fr); }
+}
 @media (max-width: 1200px){
-  .poolGrid{ grid-template-columns: repeat(4, 1fr); }
+  .poolGrid{ grid-template-columns: repeat(6, 1fr); }
 }
 @media (max-width: 720px){
   .poolGrid{ grid-template-columns: repeat(2, 1fr); }
@@ -368,13 +372,13 @@ input:focus, select:focus, textarea:focus{
   border-radius: 16px;
   background:#fff;
   overflow:hidden;
-  padding: 8px 8px 10px;
+  padding: 7px 7px 9px;
   text-align:center;
 }
 
 .iconImg{
-  width:128px;
-  height:128px;
+  width:108px;
+  height:108px;
   object-fit:cover;
   border-radius: 14px;
   display:block;

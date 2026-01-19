@@ -818,7 +818,7 @@ async function drawSummary(room){
     }
   }
 
-  // ===== bloco de pool + snipes (sempre) =====
+  // ===== bloco de pool + snipes (2 colunas, sem espaço vazio) =====
   const rows = Math.max(1, Math.ceil(order.length / cols));
   const cardsEndY = startY + rows * cardH + (rows - 1) * gapY;
   let baseY = cardsEndY + 55;
@@ -828,32 +828,81 @@ async function drawSummary(room){
   const s1 = room.state.civs?.snipedBy?.P2 || []; // P1 perdeu
   const s2 = room.state.civs?.snipedBy?.P1 || []; // P2 perdeu
 
-  // painel de fundo para dar destaque ao pool/snipes
+  // painel de fundo (altura será "cortada" no final)
   const panelX = 30;
   const panelY = baseY - 34;
   const panelW = canvas.width - 60;
-  const panelH = canvas.height - panelY - 30;
   ctx.fillStyle = "rgba(11,18,32,.04)";
-  roundRect(ctx, panelX, panelY, panelW, panelH, 18);
+  roundRect(ctx, panelX, panelY, panelW, canvas.height - panelY - 30, 18);
   ctx.fill();
 
   ctx.fillStyle = "rgba(11,18,32,.90)";
   ctx.font = "bold 20px system-ui";
   ctx.fillText(assignEnabled ? "Pool final" : "Sem ASSIGN por mapa — pool final", 40, baseY);
+  baseY += 24;
 
-  baseY += 28;
-  baseY = await drawCivRow("P1", p1Pool, 40, baseY, canvas.width - 80);
-  baseY = await drawCivRow("P2", p2Pool, 40, baseY, canvas.width - 80);
+  async function drawIconGrid(civs, x, y, w, opts={}){
+    const icon = opts.icon ?? 36;
+    const gap = opts.gap ?? 8;
+    const cols = Math.max(1, Math.floor((w) / (icon + gap)));
+    let cx = x;
+    let cy = y;
+    let col = 0;
+    for(const civ of (civs || [])){
+      const img = await loadCivIcon(civ);
+      if(img) ctx.drawImage(img, cx, cy, icon, icon);
+      else { ctx.fillStyle = "rgba(11,18,32,.10)"; ctx.fillRect(cx, cy, icon, icon); }
+      col++;
+      if(col >= cols){ col = 0; cx = x; cy += icon + gap; }
+      else cx += icon + gap;
+    }
+    // se não tiver nada, mantém um "mínimo" para não colapsar o bloco
+    const usedH = (civs && civs.length) ? (cy - y + icon) : icon;
+    return y + usedH;
+  }
 
-  ctx.fillStyle = "rgba(11,18,32,.90)";
-  ctx.font = "bold 20px system-ui";
-  ctx.fillText("Snipes", 40, baseY);
-  baseY += 28;
-  baseY = await drawCivRow("P1 perdeu", s1, 40, baseY, canvas.width - 80);
-  baseY = await drawCivRow("P2 perdeu", s2, 40, baseY, canvas.width - 80);
+  async function drawPlayerBlock(title, pool, snipesLost, x, y, w, color){
+    // titulo
+    ctx.fillStyle = color;
+    ctx.font = "900 18px system-ui";
+    ctx.fillText(title, x, y);
+    y += 10;
+
+    // pool
+    ctx.fillStyle = "rgba(11,18,32,.80)";
+    ctx.font = "700 13px system-ui";
+    ctx.fillText("Pool", x, y+18);
+    y += 26;
+    y = (await drawIconGrid(pool, x, y, w, { icon: 34, gap: 8 })) + 16;
+
+    // snipes
+    ctx.fillStyle = "rgba(11,18,32,.80)";
+    ctx.font = "700 13px system-ui";
+    ctx.fillText("Perdeu (Snipes)", x, y+18);
+    y += 26;
+    y = (await drawIconGrid(snipesLost, x, y, w, { icon: 34, gap: 8 })) + 6;
+    return y;
+  }
+
+  // 2 colunas
+  const gutter = 26;
+  const colW = Math.floor((canvas.width - 80 - gutter) / 2);
+  const leftX = 40;
+  const rightX = 40 + colW + gutter;
+
+  const y1 = await drawPlayerBlock("P1", p1Pool, s1, leftX, baseY, colW, "#0b7a3e");
+  const y2 = await drawPlayerBlock("P2", p2Pool, s2, rightX, baseY, colW, "#a56a00");
+  baseY = Math.max(y1, y2) + 20;
+
+  // ===== corte automático da imagem (remove espaço vazio) =====
+  const usedH = Math.min(canvas.height, baseY + 30);
+  const out = document.createElement("canvas");
+  out.width = canvas.width;
+  out.height = usedH;
+  out.getContext("2d").drawImage(canvas, 0, 0, canvas.width, usedH, 0, 0, canvas.width, usedH);
 
   // show image
-  const dataUrl = canvas.toDataURL("image/png");
+  const dataUrl = out.toDataURL("image/png");
   $("summaryImg").src = dataUrl;
 
   // envia para o servidor (para o painel admin), apenas 1x por sala
