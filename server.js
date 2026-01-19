@@ -81,7 +81,7 @@ function nowMs() { return Date.now(); }
 
 function stepNeedsTimer(step) {
   if (!step) return false;
-  return ["MAP_BAN", "MAP_PICK", "CIV_BAN", "CIV_PICK", "CIV_SNIPE", "ASSIGN"].includes(step.type);
+  return ["MAP_BAN", "MAP_PICK", "CIV_BAN", "CIV_PICK", "CIV_SNIPE", "ASSIGN_DECIDE", "ASSIGN"].includes(step.type);
 }
 
 function startTimer(room) {
@@ -154,6 +154,18 @@ Room:
 
 function newRoom(config) {
   const id = nanoid(6).toUpperCase();
+
+  // Injeta etapa "ASSIGN_DECIDE" antes do ASSIGN (se existir no flow)
+  // para permitir pular o ASSIGN caso um ou ambos jogadores não queiram.
+  const flow = Array.isArray(config.flow) ? JSON.parse(JSON.stringify(config.flow)) : [];
+  const idxAssign = flow.findIndex(s => s && s.type === "ASSIGN");
+  if (idxAssign !== -1) {
+    // evita duplicar caso já exista
+    const hasDecide = flow[idxAssign - 1] && flow[idxAssign - 1].type === "ASSIGN_DECIDE";
+    if (!hasDecide) {
+      flow.splice(idxAssign, 0, { type: "ASSIGN_DECIDE", mode: "SIMUL", count: 1 });
+    }
+  }
   const room = {
     id,
     createdAt: Date.now(),
@@ -162,6 +174,10 @@ function newRoom(config) {
     state: {
       started: false,
       ready: { P1: false, P2: false },
+      players: {
+        P1: { name: "" },
+        P2: { name: "" }
+      },
       timer: { endsAt: null },
       confirm: { needed: false, ok: { P1: false, P2: false }, nextIndex: null, reason: null },
       stepIndex: 0,
@@ -175,9 +191,13 @@ function newRoom(config) {
         snipedBy: { P1: [], P2: [] },
         pendingSnipe: { P1: null, P2: null }
       },
-      assign: { byMap: [] }
+      assign: { byMap: [], enabled: true },
+      assignDecide: { P1: null, P2: null }
     }
   };
+
+  // usa flow injetado (sem mutar o config original enviado pelo admin)
+  room.config = { ...config, flow };
   rooms.set(id, room);
   return room;
 }
@@ -543,6 +563,14 @@ function validateAction(room, action) {
     return { ok: true };
   }
 
+  if (action.kind === "ASSIGN_DECIDE") {
+    const choice = action.choice;
+    if (choice !== true && choice !== false) return { ok: false, error: "INVALID_CHOICE" };
+    if (room.state.assignDecide[action.by] !== null) return { ok: false, error: "ALREADY_DECIDED" };
+    const need = step.count || 1;
+    if (room.state.stepProgress[action.by] >= need) return { ok: false, error: "LIMIT_REACHED" };
+  }
+
   if (action.kind === "ASSIGN") {
     const { mapIndex, civ } = action;
     if (typeof mapIndex !== "number") return { ok: false, error: "BAD_MAP_INDEX" };
@@ -608,6 +636,10 @@ function stepCompleted(room) {
     return room.state.stepProgress.P1 >= need && room.state.stepProgress.P2 >= need;
   }
 
+  if (step.type === "ASSIGN_DECIDE") {
+    return room.state.stepProgress.P1 >= need && room.state.stepProgress.P2 >= need;
+  }
+
   if (step.type === "ASSIGN") {
     ensureAssignSlots(room);
     const nMaps = room.state.maps.picked.length;
@@ -646,6 +678,13 @@ function applyAction(room, action) {
   if (action.kind === "READY") {
     room.state.ready[action.by] = true;
 
+    // nome opcional (antes do PRONTO)
+    if (room.state.players && room.state.players[action.by]) {
+      const raw = (action.name ?? "");
+      const name = String(raw).trim().slice(0, 24);
+      room.state.players[action.by].name = name;
+    }
+
     // só começa quando ambos prontos
     if (room.state.ready.P1 && room.state.ready.P2) {
       room.state.started = true;
@@ -656,6 +695,35 @@ function applyAction(room, action) {
       resetProgress(room);
       advanceAutoSteps(room);
       updateTimerForCurrentStep(room);
+    }
+    return;
+  }
+
+  if (action.kind === "ASSIGN_DECIDE") {
+    room.state.assignDecide[action.by] = !!action.choice;
+    room.state.stepProgress[action.by] += 1;
+
+    if (stepCompleted(room)) {
+      const bothYes = room.state.assignDecide.P1 === true && room.state.assignDecide.P2 === true;
+      room.state.assign.enabled = bothYes;
+
+      // se não for fazer assign, pula o próximo step (ASSIGN) e vai direto para o resumo
+      if (!bothYes) {
+        // limpa qualquer rascunho de assign
+        room.state.assign.byMap = [];
+
+        // pula o ASSIGN, se ele for o próximo
+        const next = room.config.flow[room.state.stepIndex + 1];
+        room.state.stepIndex += (next && next.type === "ASSIGN") ? 2 : 1;
+
+        resetProgress(room);
+        advanceAutoSteps(room);
+        updateTimerForCurrentStep(room);
+        return;
+      }
+
+      // ambos sim -> segue para ASSIGN
+      advanceOne(room);
     }
     return;
   }
@@ -756,6 +824,10 @@ function safeRoomPayload(room, forRole = null) {
   // durante ASSIGN, esconder escolhas do oponente (só revela quando sair do step)
   const step = currentStep(room);
   const hideAssign = step && step.type === "ASSIGN";
+  if (hideAssign && forRole === "OBS" && payload.state.assign && payload.state.assign.byMap) {
+    payload.state.assign.byMap = payload.state.assign.byMap.map(slot => ({ ...slot, P1: null, P2: null }));
+  }
+
   if (hideAssign && (forRole === "P1" || forRole === "P2") && payload.state.assign && payload.state.assign.byMap) {
     const opp = forRole === "P1" ? "P2" : "P1";
     payload.state.assign.byMap = payload.state.assign.byMap.map(slot => ({
@@ -826,6 +898,31 @@ function autoResolveStep(room) {
   // SIMUL: completa o que faltar e, se completo, confirma
   if (step.mode === "SIMUL") {
     const need = step.count || 1;
+
+    if (step.type === "ASSIGN_DECIDE") {
+      for (const by of ["P1", "P2"]) {
+        while (room.state.stepProgress[by] < need) {
+          // fallback seguro: em timeout assume NÃO
+          room.state.assignDecide[by] = false;
+          room.state.stepProgress[by] += 1;
+        }
+      }
+      if (stepCompleted(room)) {
+        const bothYes = room.state.assignDecide.P1 === true && room.state.assignDecide.P2 === true;
+        room.state.assign.enabled = bothYes;
+        if (!bothYes) {
+          room.state.assign.byMap = [];
+          const next = room.config.flow[room.state.stepIndex + 1];
+          room.state.stepIndex += (next && next.type === "ASSIGN") ? 2 : 1;
+          resetProgress(room);
+          advanceAutoSteps(room);
+          updateTimerForCurrentStep(room);
+        } else {
+          advanceOne(room);
+        }
+      }
+      return;
+    }
 
     if (step.type === "CIV_PICK") {
       for (const by of ["P1", "P2"]) {
