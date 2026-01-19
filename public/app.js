@@ -665,23 +665,23 @@ async function drawSummary(room){
     ctx.fillText(text, x+padX, y);
   }
 
-  function drawCivRow(label, civs, x, y, maxW){
-    // maior para ficar visível no resumo (principalmente quando não há ASSIGN)
-    const icon = 50;
+  function drawCivRow(label, civs, x, topY, maxW){
+    // Layout mais "organizado": nada de offsets negativos (evita sobreposição)
+    const icon = 46;
     const gap = 10;
-    const lineH = 60;
+    const lineH = 56;
+    const labelW = 92;
 
+    // label à esquerda (centralizado verticalmente com a 1a linha de ícones)
     ctx.font = "bold 17px system-ui";
     ctx.fillStyle = "rgba(11,18,32,.85)";
-    ctx.fillText(label, x, y);
+    ctx.fillText(label, x, topY + 32);
 
-    let cx = x + 58;
-    let cy = y - 32;
-    let lineY = cy;
+    let cx = x + labelW;
+    let lineY = topY;
     const startX = cx;
 
-    (civs || []).forEach(async () => {}); // no-op (mantém lint feliz)
-    // desenha de forma sequencial (await por ícone)
+    (civs || []).forEach(async () => {}); // no-op
     return (async () => {
       for(const civ of (civs || [])){
         const img = await loadCivIcon(civ);
@@ -697,7 +697,8 @@ async function drawSummary(room){
         }
         cx += icon + gap;
       }
-      return lineY + lineH;
+      // retorna o Y do próximo bloco, com um respiro
+      return lineY + lineH + 8;
     })();
   }
 
@@ -764,9 +765,24 @@ async function drawSummary(room){
     ctx.fillText(mapName, x+160, y+44);
 
     // label (game 1 vs escolha do perdedor)
-    ctx.fillStyle = "rgba(11,18,32,.65)";
-    ctx.font = "bold 14px system-ui";
     const isGame1 = (item.idx === maps.length - 1);
+
+    // Destaque visual forte para o primeiro mapa
+    if(isGame1){
+      const tagW = 132;
+      const tagH = 28;
+      const tagX = x + cardW - tagW - 18;
+      const tagY = y + 18;
+      ctx.fillStyle = "rgba(255,210,120,.95)";
+      roundRect(ctx, tagX, tagY, tagW, tagH, 10);
+      ctx.fill();
+      ctx.fillStyle = "rgba(11,18,32,.92)";
+      ctx.font = "900 14px system-ui";
+      ctx.fillText("1º JOGO", tagX + 14, tagY + 19);
+    }
+
+    ctx.fillStyle = isGame1 ? "rgba(11,18,32,.90)" : "rgba(11,18,32,.65)";
+    ctx.font = isGame1 ? "900 15px system-ui" : "bold 14px system-ui";
     ctx.fillText(isGame1 ? "GAME 1 (MAPA INICIAL)" : "ESCOLHA DO PERDEDOR", x+160, y+64);
 
     // assignments
