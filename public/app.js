@@ -667,9 +667,9 @@ async function drawSummary(room){
 
   function drawCivRow(label, civs, x, topY, maxW){
     // Layout mais "organizado": nada de offsets negativos (evita sobreposição)
-    const icon = 46;
-    const gap = 10;
-    const lineH = 56;
+    const icon = 40;// menor para caber mais colunas
+    const gap = 8;
+    const lineH = 50;
     const labelW = 92;
 
     // label à esquerda (centralizado verticalmente com a 1a linha de ícones)
