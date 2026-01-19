@@ -68,7 +68,8 @@ body{
 }
 
 .wrap{
-  max-width: 1180px;
+  /* mais largo para enxergar pool sem rolar tanto */
+  max-width: 1440px;
   margin: 22px auto 60px;
   padding: 0 14px;
 }
@@ -271,7 +272,8 @@ input:focus, select:focus, textarea:focus{
   flex-wrap:wrap;
 }
 .pill{
-  padding: 10px 14px;
+  /* ~75% */
+  padding: 8px 12px;
   border:1px solid var(--line);
   border-radius: 999px;
   background: rgba(255,255,255,.75);
@@ -283,6 +285,7 @@ input:focus, select:focus, textarea:focus{
   grid-template-columns: 1fr 1fr;
   gap: 14px;
   margin-top: 14px;
+  align-items: start;
 }
 @media (max-width: 900px){
   .boards{ grid-template-columns: 1fr; }
@@ -291,7 +294,7 @@ input:focus, select:focus, textarea:focus{
 .boardCard{
   border:1px solid var(--line);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: 10px;
   background: rgba(255,255,255,.70);
 }
 
@@ -345,12 +348,12 @@ input:focus, select:focus, textarea:focus{
 .poolGrid{
   margin-top: 12px;
   display:grid;
-  /* mais colunas em FullHD (8-10) */
-  grid-template-columns: repeat(8, 1fr);
-  gap: 12px;
+  /* mais colunas em FullHD */
+  grid-template-columns: repeat(10, 1fr);
+  gap: 10px;
 }
 @media (min-width: 1400px){
-  .poolGrid{ grid-template-columns: repeat(10, 1fr); }
+  .poolGrid{ grid-template-columns: repeat(12, 1fr); }
 }
 @media (max-width: 1200px){
   .poolGrid{ grid-template-columns: repeat(6, 1fr); }
@@ -379,14 +382,15 @@ input:focus, select:focus, textarea:focus{
   border-radius: 16px;
   background:#fff;
   overflow:hidden;
-  padding: 6px 6px 8px;
+  /* ~75% */
+  padding: 5px 5px 6px;
   text-align:center;
 }
 
 .iconImg{
-  /* menor para caber 8-10 colunas em FullHD */
-  width:96px;
-  height:96px;
+  /* ~75% do tamanho anterior */
+  width:72px;
+  height:72px;
   object-fit:cover;
   border-radius: 14px;
   display:block;
@@ -396,7 +400,7 @@ input:focus, select:focus, textarea:focus{
 
 .iconLabel{
   margin-top: 6px;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 900;
   color: rgba(11,18,32,.78);
   text-transform: uppercase;
@@ -404,13 +408,22 @@ input:focus, select:focus, textarea:focus{
 }
 
 .miniRow{
-  display:flex;
+  /* mais largo e bem menos alto */
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  justify-content:flex-start;
-  align-content:flex-start;
-  flex-wrap:wrap;
-  /* espaço suficiente para 4 itens + labels mesmo com nome grande */
-  min-height: 260px;
+  justify-items: center;
+  align-items: start;
+  align-content: start;
+  /* cabe 4 itens sem “tela infinita” */
+  min-height: 160px;
+}
+
+@media (max-width: 1100px){
+  .miniRow{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 720px){
+  .miniRow{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .hiddenCard{
@@ -418,11 +431,11 @@ input:focus, select:focus, textarea:focus{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  height: 168px;
+  height: 130px;
 }
 .hiddenMark{
-  width: 128px;
-  height: 128px;
+  width: 96px;
+  height: 96px;
   border-radius: 14px;
   border: 1px dashed var(--line);
   display:flex;
@@ -500,4 +513,107 @@ input:focus, select:focus, textarea:focus{
   border-radius: var(--radius);
   border:1px solid var(--line);
   box-shadow: var(--shadow);
+}
+
+/* =============== Header / Side menu (LBI) =============== */
+.appHeader{
+  height: 64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255,255,255,.86);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.appHeaderLeft{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  min-width: 220px;
+}
+.appHeaderLogo{
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: rgba(11,18,32,.05);
+}
+.appHeaderTitle{
+  font-weight: 950;
+  letter-spacing: .4px;
+  font-size: 13px;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+.appHeaderRight{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+.iconBtn{
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.70);
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor:pointer;
+  font-weight: 900;
+}
+.iconBtn:hover{ box-shadow: 0 10px 26px rgba(16,30,70,.10); }
+
+.sideNavBackdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 70;
+}
+.sideNav{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 300px;
+  height: 100vh;
+  background: #fff;
+  border-right: 1px solid var(--line);
+  box-shadow: 0 20px 60px rgba(16,30,70,.18);
+  z-index: 80;
+  padding: 14px;
+}
+.sideNavHead{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 10px;
+}
+.sideNavLogo{
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  object-fit: contain;
+  background: rgba(11,18,32,.05);
+}
+.sideNavTitle{
+  font-weight: 950;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  font-size: 12px;
+}
+.sideNav a{
+  display:block;
+  text-decoration:none;
+  color: var(--ink);
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-weight: 900;
+}
+.sideNav a:hover{
+  background: rgba(43,47,136,.06);
+  border-color: rgba(43,47,136,.18);
 }
