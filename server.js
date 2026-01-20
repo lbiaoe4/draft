@@ -172,6 +172,7 @@ function newRoom(config) {
     config,
     seats: { P1: null, P2: null },
     state: {
+      discordSent: false,
       started: false,
       ready: { P1: false, P2: false },
       players: {
@@ -343,19 +344,24 @@ app.post("/api/rooms/:id/summary", async (req, res) => {
     savedAt: new Date().toISOString(),
   };
 
-  // 🔔 Notifica no Discord com a imagem (fire-and-forget)
-  try {
+// 🔔 Notifica no Discord com a imagem (apenas uma vez)
+try {
+  if (!room.state.discordSent) {
     const buf = dataUrlToPngBuffer(dataUrl);
     if (buf) {
-      sendDiscordSummaryImage({
+      await sendDiscordSummaryImage({
         roomId: room.id,
         bufferPng: buf,
         series: room.config?.series || null,
       });
+
+      room.state.discordSent = true; // 🔐 trava após o primeiro envio
     }
-  } catch (e) {
-    console.warn("Falha ao enviar resumo para o Discord:", String(e?.message || e));
   }
+} catch (e) {
+  console.warn("Falha ao enviar resumo para o Discord:", String(e?.message || e));
+}
+
 
   res.json({ ok: true });
 });
