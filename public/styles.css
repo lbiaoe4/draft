@@ -1,13 +1,13 @@
 :root{
-  --bg:#f6f9ff;
-  --ink:#0b1220;
-  --muted: rgba(11,18,32,.65);
-  --line: rgba(11,18,32,.18);
-  --panel:#ffffff;
-  --primary:#2b2f88;
+  --bg:#0b1220;
+  --ink:#e6ecff;
+  --muted: rgba(230,236,255,.70);
+  --line: rgba(255,255,255,.10);
+  --panel:#121f35;
+  --primary:#f5c84b;
   --green:#0b7a3e;
-  --amber:#f2b13c;
-  --shadow: 0 18px 50px rgba(16,30,70,.10);
+  --amber:#d9a62a;
+  --shadow: 0 18px 50px rgba(0,0,0,.40);
   --radius: 22px;
 }
 
@@ -24,7 +24,7 @@ body{
   margin:0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color:var(--ink);
-  background: linear-gradient(180deg, #eef4ff, var(--bg));
+  background: linear-gradient(180deg, #0e1525, var(--bg));
 }
 
 .topbar{
@@ -34,7 +34,7 @@ body{
   justify-content:space-between;
   padding:0 18px;
   border-bottom:1px solid var(--line);
-  background: rgba(255,255,255,.82);
+  background: rgba(11,18,32,.82);
   backdrop-filter: blur(8px);
 }
 
@@ -56,7 +56,7 @@ body{
 .logoDot{
   width:12px;height:12px;border-radius:999px;
   background: var(--primary);
-  box-shadow: 0 0 0 6px rgba(43,47,136,.10);
+  box-shadow: 0 0 0 6px rgba(245,200,75,.10);
 }
 
 .links a{ text-decoration:none; color:var(--ink); }
@@ -64,7 +64,7 @@ body{
   padding:8px 12px;
   border:1px solid var(--line);
   border-radius:999px;
-  background: rgba(255,255,255,.6);
+  background: rgba(255,255,255,.08);
 }
 
 .wrap{
@@ -89,10 +89,10 @@ body{
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: rgba(255,255,255,.7);
+  background: rgba(255,255,255,.04);
   transition: transform .12s ease, box-shadow .12s ease;
 }
-.menuCard:hover{ transform: translateY(-1px); box-shadow: 0 10px 30px rgba(16,30,70,.10); }
+.menuCard:hover{ transform: translateY(-1px); box-shadow: 0 10px 30px rgba(0,0,0,.30); }
 .menuTitle{ font-weight: 900; letter-spacing: .3px; margin-bottom: 6px; }
 
 .panel{
@@ -132,14 +132,14 @@ input,select,textarea{
   border-radius: 14px;
   outline:none;
   font-size: 14px;
-  background:#fff;
+  background:#121f35;
 }
 
 textarea{ resize:vertical; }
 
 input:focus, select:focus, textarea:focus{
-  border-color: rgba(43,47,136,.45);
-  box-shadow: 0 0 0 4px rgba(43,47,136,.10);
+  border-color: rgba(245,200,75,.45);
+  box-shadow: 0 0 0 4px rgba(245,200,75,.10);
 }
 
 .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
@@ -192,7 +192,7 @@ input:focus, select:focus, textarea:focus{
 }
 .btn.primary{
   background: var(--primary);
-  color:#fff;
+  color:#111318;
 }
 .btn:disabled{
   opacity:.55;
@@ -251,7 +251,7 @@ input:focus, select:focus, textarea:focus{
   padding: 10px 14px;
   border:1px solid var(--line);
   border-radius: 999px;
-  background: rgba(255,255,255,.7);
+  background: rgba(255,255,255,.06);
   font-weight: 800;
 }
 
@@ -276,7 +276,7 @@ input:focus, select:focus, textarea:focus{
   padding: 8px 12px;
   border:1px solid var(--line);
   border-radius: 999px;
-  background: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.06);
   font-weight: 800;
 }
 
@@ -295,7 +295,7 @@ input:focus, select:focus, textarea:focus{
   border:1px solid var(--line);
   border-radius: var(--radius);
   padding: 10px;
-  background: rgba(255,255,255,.70);
+  background: rgba(255,255,255,.04);
 }
 
 .boardHead{
@@ -321,7 +321,7 @@ input:focus, select:focus, textarea:focus{
   border:1px solid var(--line);
   border-radius: var(--radius);
   padding: 14px;
-  background: rgba(43,47,136,.05);
+  background: rgba(245,200,75,.05);
   text-align:center;
 }
 
@@ -335,7 +335,7 @@ input:focus, select:focus, textarea:focus{
   border:1px solid var(--line);
   border-radius: var(--radius);
   padding: 12px;
-  background: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.04);
 }
 
 .poolTitleRow{
@@ -380,7 +380,7 @@ input:focus, select:focus, textarea:focus{
 .iconCard{
   border:1px solid var(--line);
   border-radius: 16px;
-  background:#fff;
+  background:#121f35;
   overflow:hidden;
   /* ~75% */
   padding: 5px 5px 6px;
@@ -395,14 +395,14 @@ input:focus, select:focus, textarea:focus{
   border-radius: 14px;
   display:block;
   margin: 0 auto;
-  background: rgba(11,18,32,.06);
+  background: rgba(230,236,255,.06);
 }
 
 .iconLabel{
   margin-top: 6px;
   font-size: 9px;
   font-weight: 900;
-  color: rgba(11,18,32,.78);
+  color: rgba(230,236,255,.78);
   text-transform: uppercase;
   letter-spacing:.5px;
 }
@@ -443,11 +443,11 @@ input:focus, select:focus, textarea:focus{
   justify-content:center;
   font-weight: 950;
   font-size: 40px;
-  color: rgba(11,18,32,.45);
+  color: rgba(230,236,255,.45);
 }
 
 .emptyCard .hiddenMark{
-  background: rgba(43,47,136,.06);
+  background: rgba(245,200,75,.06);
 }
 
 .banOutline{ box-shadow: 0 0 0 3px rgba(177,37,37,.35) inset; }
@@ -469,12 +469,12 @@ input:focus, select:focus, textarea:focus{
   border:1px solid var(--line);
   border-radius: var(--radius);
   padding: 12px;
-  background: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.04);
   cursor:pointer;
 }
 .mapAssignCard.active{
-  border-color: rgba(43,47,136,.55);
-  box-shadow: 0 0 0 4px rgba(43,47,136,.12);
+  border-color: rgba(245,200,75,.55);
+  box-shadow: 0 0 0 4px rgba(245,200,75,.12);
 }
 
 .mapTop{
@@ -493,7 +493,7 @@ input:focus, select:focus, textarea:focus{
   border:1px solid var(--line);
   border-radius: 16px;
   padding: 8px;
-  background: rgba(255,255,255,.85);
+  background: rgba(255,255,255,.06);
 }
 
 .slotHead{
@@ -523,7 +523,7 @@ input:focus, select:focus, textarea:focus{
   justify-content:space-between;
   padding: 0 14px;
   border-bottom: 1px solid var(--line);
-  background: rgba(255,255,255,.86);
+  background: rgba(11,18,32,.86);
   backdrop-filter: blur(8px);
   position: sticky;
   top: 0;
@@ -540,7 +540,7 @@ input:focus, select:focus, textarea:focus{
   height: 38px;
   border-radius: 10px;
   object-fit: contain;
-  background: rgba(11,18,32,.05);
+  background: rgba(230,236,255,.05);
 }
 .appHeaderTitle{
   font-weight: 950;
@@ -556,13 +556,13 @@ input:focus, select:focus, textarea:focus{
 }
 .iconBtn{
   border: 1px solid var(--line);
-  background: rgba(255,255,255,.70);
+  background: rgba(255,255,255,.06);
   padding: 8px 12px;
   border-radius: 999px;
   cursor:pointer;
   font-weight: 900;
 }
-.iconBtn:hover{ box-shadow: 0 10px 26px rgba(16,30,70,.10); }
+.iconBtn:hover{ box-shadow: 0 10px 26px rgba(0,0,0,.30); }
 
 .sideNavBackdrop{
   position: fixed;
@@ -576,9 +576,9 @@ input:focus, select:focus, textarea:focus{
   left: 0;
   width: 300px;
   height: 100vh;
-  background: #fff;
+  background: #121f35;
   border-right: 1px solid var(--line);
-  box-shadow: 0 20px 60px rgba(16,30,70,.18);
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
   z-index: 80;
   padding: 14px;
 }
@@ -595,7 +595,7 @@ input:focus, select:focus, textarea:focus{
   height: 40px;
   border-radius: 12px;
   object-fit: contain;
-  background: rgba(11,18,32,.05);
+  background: rgba(230,236,255,.05);
 }
 .sideNavTitle{
   font-weight: 950;
@@ -614,6 +614,6 @@ input:focus, select:focus, textarea:focus{
   font-weight: 900;
 }
 .sideNav a:hover{
-  background: rgba(43,47,136,.06);
-  border-color: rgba(43,47,136,.18);
+  background: rgba(245,200,75,.06);
+  border-color: rgba(245,200,75,.18);
 }
